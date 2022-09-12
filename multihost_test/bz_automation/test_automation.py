@@ -66,3 +66,31 @@ class TestPamBz(object):
                                "local_anuj --reset")
         execute_cmd(multihost, "cp -vf /etc/security/faillock.conf_bkp "
                                "/etc/security/faillock.conf")
+
+    def test_cve_2010_3316(self, multihost, bkp_pam_config, compile_myxauth):
+        """
+        :title: CVE-2010-3316-pam_xauth-missing-return-value-checks-from-setuid
+        :id: aebe751c-31b8-11ed-a91f-845cf3eff344
+        :bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=637898
+        """
+        TUSER = "pam-xauth-tester"
+        SLOG = "/var/log/secure"
+        execute_cmd(multihost, 'rm -f /tmp/xauthlog')
+        execute_cmd(multihost, f"useradd {TUSER}")
+        execute_cmd(multihost, "cp -f myxauth /myxauth")
+        execute_cmd(multihost, 'sed -i "s/pam_xauth\.so/pam_xauth\.so '
+                               'debug xauthpath=\/myxauth/g" /etc/pam.d/su')
+        execute_cmd(multihost, 'echo "pam-xauth-tester    hard    nproc   '
+                               '0" >> /etc/security/limits.conf')
+        execute_cmd(multihost, 'mkdir -p /root/.xauth')
+        execute_cmd(multihost, "echo '*' >> /root/.xauth/export")
+        execute_cmd(multihost, f"id -u {TUSER}")
+        with pytest.raises(subprocess.CalledProcessError):
+            execute_cmd(multihost, f"DISPLAY=0:0 su - {TUSER} -c exit")
+        time.sleep(3)
+        execute_cmd(multihost, f"tail -n 11 {SLOG} | tee mktemp")
+        for i in ["/tmp/myxauth.c", "myxauth"]:
+            execute_cmd(multihost, f"rm -vf {i}")
+        execute_cmd(multihost, 'rm -vfr /root/.xauth')
+        execute_cmd(multihost, f"userdel -rf {TUSER}")
+        execute_cmd(multihost, "cat /tmp/xauthlog | wc -l | grep 2")

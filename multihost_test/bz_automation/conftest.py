@@ -68,7 +68,8 @@ def bkp_pam_config(session_multihost, request):
                 '/etc/pam.d/su-l',
                 '/etc/security/access.conf',
                 '/etc/pam.d/sshd',
-                '/etc/pam.d/password-auth']:
+                '/etc/pam.d/password-auth',
+                '/etc/security/limits.conf']:
         execute_cmd(session_multihost, f"cp -vf {bkp} {bkp}_anuj")
 
     def restoresssdconf():
@@ -81,7 +82,8 @@ def bkp_pam_config(session_multihost, request):
                     '/etc/pam.d/su-l',
                     '/etc/security/access.conf',
                     '/etc/pam.d/sshd',
-                    '/etc/pam.d/password-auth']:
+                    '/etc/pam.d/password-auth',
+                    '/etc/security/limits.conf']:
             execute_cmd(session_multihost, f"mv -vf {bkp}_anuj {bkp}")
 
     request.addfinalizer(restoresssdconf)
@@ -132,6 +134,16 @@ def create_system_user(session_multihost, request):
         execute_cmd(session_multihost, "userdel -rf systest")
 
     request.addfinalizer(restore_conf)
+
+
+@pytest.fixture(scope='function')
+def compile_myxauth(session_multihost, request):
+    """ Compile myxauth.c """
+    file_location1 = "/multihost_test/bz_automation/script/myxauth.c"
+    session_multihost.client[0].transport.put_file(os.getcwd() +
+                                           file_location1,
+                                           '/tmp/myxauth.c')
+    execute_cmd(session_multihost, "gcc /tmp/myxauth.c -o myxauth")
 
 
 @pytest.fixture(scope="session", autouse=True)
