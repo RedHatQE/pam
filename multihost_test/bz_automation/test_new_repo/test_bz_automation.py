@@ -12,10 +12,10 @@ def execute_cmd(client: Client, command):
 
 
 @pytest.mark.topology(KnownTopology.Client)
-def test_chkpwd_onlyroot(client: Client, bkp_pam_config, create_localusers):
+def test_pwhistory_enforces_root(client: Client, bkp_pam_config, create_localusers):
     """
     :title: bz824858-pam-pwhistory-enforces-root-to-password-change
-    :id: e7c4db96-eaf9-11eb-8fbb-845cf3eff344
+    :id: a87eb61c-334d-11ed-a639-845cf3eff344
     """
     _PASSWORD = "01_pass_change_01"
     _PASSWORD2 = "02_change_pass_02"
@@ -51,4 +51,3 @@ def test_chkpwd_onlyroot(client: Client, bkp_pam_config, create_localusers):
     execute_cmd(client, f"sh /tmp/bz824858.sh pamtest1 {_PASSWORD3}")
     execute_cmd(client, f"sh /tmp/bz824858.sh pamtest1 {_PASSWORD4}")
     execute_cmd(client, f"sh /tmp/bz824858.sh pamtest1 {_PASSWORD}")
-
