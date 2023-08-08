@@ -157,4 +157,4 @@ def setup_session(session_multihost, request):
     """
     execute_cmd(session_multihost, "yum update -y pam")
     execute_cmd(session_multihost, "yum install -y gcc pam-devel")
-    execute_cmd(session_multihost, 'yum  install -y libeconf*')
+

@@ -1,11 +1,11 @@
 
 import pytest
 import subprocess
-import os
 import time
 import paramiko
 from sssd.testlib.common.utils import SSHClient
 from sssd.testlib.common.expect import pexpect_ssh
+from sssd.testlib.common.ssh2_python import check_login_client
 
 
 def execute_cmd(multihost, command):
