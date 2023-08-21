@@ -127,3 +127,32 @@ class TestPamBz(object):
         client.logout()
         assert "pam_motd: error scanning directory" not in \
                execute_cmd(multihost, "cat /var/log/secure").stdout_text
+
+    def test_pam_faillock_audit(self, multihost, create_localusers, bkp_pam_config):
+        """
+        :title: Pam_faillock audit events duplicate uid.
+        :id: c62fda84-401b-11ee-90bd-845cf3eff344
+        :bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=2231556
+        :setup:
+            1. Enable pam_faillock in the PAM stack (either with authselect "authselect
+                enable-feature with-faillock" or manually)
+            2. Modify pam_faillock "deny" option in /etc/security/faillock.conf to
+                lock the user at the first attempt (deny=1)
+        :steps:
+            1. Authenticate as user and input an incorrect password
+            2. Check that audit file (/var/log/audit/audit.log) contains the correct format.
+        :expectedresults:
+            1. Authentication should fail.
+            2. Pam_faillock audit must display messages with the correct format:
+                op=pam_faillock suid=UID. Where UID is the ID of the user trying to authenticate.
+        """
+        client = multihost.client[0]
+        uid = client.run_command("id -u local_anuj").stdout_text.split()[0]
+        client.run_command("authselect enable-feature with-faillock")
+        client.run_command("echo 'deny = 1' >> /etc/security/faillock.conf")
+        client.run_command("> /var/log/audit/audit.log")
+        with pytest.raises(Exception):
+            check_login_client(multihost, "local_anuj", 'Secret1234')
+        time.sleep(3)
+        log_str = multihost.client[0].get_file_contents("/var/log/audit/audit.log").decode('utf-8')
+        assert f'op=pam_faillock suid="{uid}"' in log_str
