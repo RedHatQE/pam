@@ -61,7 +61,7 @@ def backupsssdconf(session_multihost, request):
 def bkp_pam_config(session_multihost, request):
     """ create users for test """
     for bkp in ['/etc/pam.d/system-auth',
-                #'/etc/security/pwhistory.conf',
+                '/etc/security/pwhistory.conf',
                 '/etc/security/opasswd',
                 '/etc/bashrc',
                 '/etc/pam.d/su',
@@ -76,7 +76,7 @@ def bkp_pam_config(session_multihost, request):
     def restoresssdconf():
         """ Restore """
         for bkp in ['/etc/pam.d/system-auth',
-                    #'/etc/security/pwhistory.conf',
+                    '/etc/security/pwhistory.conf',
                     '/etc/security/opasswd',
                     '/etc/bashrc',
                     '/etc/pam.d/su',
@@ -157,4 +157,3 @@ def setup_session(session_multihost, request):
     """
     execute_cmd(session_multihost, "yum update -y pam")
     execute_cmd(session_multihost, "yum install -y gcc pam-devel")
-    execute_cmd(session_multihost, 'yum install -y libeconf*')
