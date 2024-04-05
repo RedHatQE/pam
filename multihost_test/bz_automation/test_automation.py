@@ -254,3 +254,31 @@ class TestPamBz(object):
         with pytest.raises(Exception):
             client.run_command("sh /tmp/2014458.sh")
         client.run_command("rm -vf /tmp/2014458.sh")
+
+    def test_bz_2070532(self, multihost, bkp_pam_config):
+        """
+        :title: Changing UID_MIN ignores GID_MIN value in /etc/login.defs
+        :id: c6f49b14-9262-11ee-a30b-845cf3eff344
+        :bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=2070532
+        :steps:
+          1. Modify UID_MIN in /etc/login.defs. Change the minimum UID from 1000 to 5000
+          2. Add a user (u5k) and a group (g1k)
+          3. Check if the changes in /etc/passwd and /etc/group were successful
+          4. Cleanup
+        :expectedresults:
+          1. Modification Should succeed
+          2. User and Group should be added
+          3. Check should pass
+          4. Clean up should success
+        """
+        client = multihost.client[0]
+        client.run_command("sed -i -e '/UID_MIN/ s:1000:5000:' /etc/login.defs")
+        client.run_command("useradd u5k")
+        client.run_command("groupadd g1k")
+
+        assert "5000:5000" in client.run_command("tail -n4 /etc/passwd").stdout_text
+        assert "u5k:x:1000:" in client.run_command("tail -n4 /etc/group").stdout_text
+        assert "g1k:x:1001:" in client.run_command("tail -n4 /etc/group").stdout_text
+
+        client.run_command("userdel -rf u5k")
+        client.run_command("groupdel -f g1k")
