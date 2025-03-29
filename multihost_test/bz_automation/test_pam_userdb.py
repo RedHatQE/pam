@@ -79,7 +79,7 @@ class TestPamBz(object):
                                                file_location,
                                                '/tmp/pam_userdb.py')
         # Copy libdb to gdbm converted db file to client machine
-        file_location = "/script/test_users.gdbm"
+        file_location = "/multihost_test/bz_automation/script/test_users.gdbm"
         multihost.client[0].transport.put_file(os.getcwd() +
                                                file_location,
                                                '/tmp/test_users.gdbm')
