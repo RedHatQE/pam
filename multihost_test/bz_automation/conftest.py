@@ -163,6 +163,8 @@ def setup_session(session_multihost, request):
     :param obj session_multihost: multihost object
     :param obj request: pytest request object
     """
+    execute_cmd(session_multihost, "dnf install -y python3-pip")
+    execute_cmd(session_multihost, "pip install pam")
     execute_cmd(session_multihost, "yum update -y pam")
     execute_cmd(session_multihost, "yum update -y shadow-utils")
     execute_cmd(session_multihost, "yum install -y gcc pam-devel")
