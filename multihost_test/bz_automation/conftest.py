@@ -156,6 +156,20 @@ def compile_myxauth(session_multihost, request):
     execute_cmd(session_multihost, "gcc /tmp/myxauth.c -o myxauth")
 
 
+@pytest.fixture(scope='function')
+def create_user_with_sudo_access(session_multihost, request):
+    """ Add user and provide sudo access """
+    execute_cmd(session_multihost, "useradd local_sudo")
+    execute_cmd(session_multihost, f"echo password123 | passwd --stdin local_sudo")
+    execute_cmd(session_multihost, f"echo 'local_sudo   ALL=(ALL:ALL) ALL' >> /etc/sudoers")
+
+    def restoresssdconf():
+        """ Restore """
+        execute_cmd(session_multihost, f"userdel -rf local_sudo")
+
+    request.addfinalizer(restoresssdconf)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def setup_session(session_multihost, request):
     """

@@ -12,6 +12,7 @@ import subprocess
 import time
 import paramiko
 import os
+import re
 from sssd.testlib.common.utils import SSHClient
 from sssd.testlib.common.expect import pexpect_ssh
 from sssd.testlib.common.ssh2_python import check_login_client
@@ -347,3 +348,51 @@ class TestPamBz(object):
         result = multihost.master[0].run_command(f"sh /tmp/authentication_master.sh "
                                                  f"{multihost.client[0].sys_hostname}").stdout_text
         assert "Connection closed by" in result
+
+    @pytest.mark.tier1
+    def test_pam_faillock_sudo_duplicate_entries(self, multihost, bkp_pam_config, create_user_with_sudo_access):
+        """
+        :title: pam_faillock duplicate entry verification for sudo commands
+        :id: 32b4ce84-092f-11f0-9ff4-1ee79fc47b20
+        :bugzilla: https://issues.redhat.com/browse/RHEL-5040
+        :setup:
+            1. Enable faillock feature
+            2. Configure faillock settings:
+                - Set deny limit to 3 in /etc/security/faillock.conf
+                - Set unlock time to 600 in /etc/security/faillock.conf
+            3. Reset faillock counters
+        :steps:
+            1. Verify initial faillock state for local_sudo user
+            2. Attempt login with wrong password
+            3. Check faillock output for failed attempt record
+        :expectedresults:
+            1. Initial faillock state for local_sudo user is clean
+            2. Wrong password attempt fails
+            3. Faillock records exactly one failed attempt
+        """
+        client = multihost.client[0]
+        username = "local_sudo"
+
+        # Setup: Configure faillock
+        client.run_command("authselect enable-feature with-faillock")
+        faillock_conf = "/etc/security/faillock.conf"
+        client.run_command(f"sed -i '/^deny/d' {faillock_conf}; echo 'deny = 3' >> {faillock_conf}")
+        client.run_command(f"sed -i '/^unlock_time/d' {faillock_conf}; echo 'unlock_time = 600' >> {faillock_conf}")
+        client.run_command("faillock --reset")
+
+        # Step 1: Verify initial faillock state
+        initial_output = client.run_command("faillock").stdout_text
+        assert not any(line.strip().endswith("TTY") for line in initial_output.splitlines() if username in line), \
+            "Initial faillock state should be clean"
+
+        # Step 2 & 3: Test failed login attempt and verify faillock record
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            client.run_command('echo "wrong_pass" | su - local_sudo -c "sudo -S ll"', raiseonerr=True)
+        assert exc_info.value.returncode != 0, "Login attempt with wrong password should fail"
+
+        # Verify faillock records exactly one failed attempt
+        faillock_output = client.run_command("faillock").stdout_text
+        pattern = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} TTY\s+V'
+        matches = re.findall(pattern, faillock_output)
+        count = len(matches)
+        assert count == 1, f"Expected 1 failed attempt, found {count}"
