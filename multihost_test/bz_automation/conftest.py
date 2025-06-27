@@ -75,7 +75,7 @@ def bkp_pam_config(session_multihost, request):
                 '/etc/security/faillock.conf',
                 '/etc/sudoers',
                 '/etc/pam.d/sudo']:
-        execute_cmd(session_multihost, f"cp -vf {bkp} {bkp}_anuj")
+        session_multihost.client[0].run_command(f"cp -vf {bkp} {bkp}_anuj", raiseonerr=False)
 
     def restoresssdconf():
         """ Restore """
@@ -94,7 +94,7 @@ def bkp_pam_config(session_multihost, request):
                     '/etc/security/faillock.conf',
                     '/etc/sudoers',
                     '/etc/pam.d/sudo']:
-            execute_cmd(session_multihost, f"mv -vf {bkp}_anuj {bkp}")
+            session_multihost.client[0].run_command(f"mv -vf {bkp}_anuj {bkp}", raiseonerr=False)
 
     request.addfinalizer(restoresssdconf)
 
