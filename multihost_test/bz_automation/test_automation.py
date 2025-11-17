@@ -347,3 +347,27 @@ class TestPamBz(object):
         result = multihost.master[0].run_command(f"sh /tmp/authentication_master.sh "
                                                  f"{multihost.client[0].sys_hostname}").stdout_text
         assert "Connection closed by" in result
+
+    @pytest.mark.tier1
+    def test_empty_lastchange_with_expiration(self, multihost, bkp_pam_config, create_localusers):
+        """PAM should allow login when last password change field is empty in /etc/shadow even with expiration configured
+
+        :id: 04812bf2-c38d-11f0-b772-0ec11b8a1c6e
+        :bugzilla: https://issues.redhat.com/browse/RHEL-70476, https://issues.redhat.com/browse/RHEL-70519
+        :setup:
+            1. Use existing local user from fixture
+            2. Configure password expiration fields using chage
+        :steps:
+            1. Attempt to login via SSH with correct credentials
+        :expectedresults:
+            1. Login should succeed as the empty last change field should not trigger expiration enforcement
+        """
+        user = "local_anuj"
+        password = "password123"
+        client = multihost.client[0]
+
+        execute_cmd(multihost, f'chage -d "" -M 360 {user}')
+
+        ssh = SSHClient(client.ip, username=user, password=password)
+        _, _, _ = ssh.execute_cmd("id")
+        ssh.close()
