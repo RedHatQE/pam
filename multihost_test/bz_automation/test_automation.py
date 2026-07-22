@@ -13,8 +13,6 @@ import time
 import paramiko
 import os
 from sssd.testlib.common.utils import SSHClient
-from sssd.testlib.common.expect import pexpect_ssh
-from sssd.testlib.common.ssh2_python import check_login_client
 
 
 def execute_cmd(multihost, command):
@@ -145,10 +143,9 @@ class TestPamBz(object):
         execute_cmd(multihost, "> /var/log/secure")
         for dirc in ['/run/motd.d', '/etc/motd.d', '/usr/lib/motd.d']:
             execute_cmd(multihost, f"rm -vfr {dirc}")
-        client = pexpect_ssh(multihost.client[0].sys_hostname,
-                             "local_anuj", 'password123', debug=False)
-        client.login(login_timeout=30, sync_multiplier=5, auto_prompt_reset=False)
-        client.logout()
+        ssh = SSHClient(multihost.client[0].ip,
+                        username="local_anuj", password="password123")
+        ssh.close()
         assert "pam_motd: error scanning directory" not in \
                execute_cmd(multihost, "cat /var/log/secure").stdout_text
 
