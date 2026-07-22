@@ -100,8 +100,8 @@ class TestPamBz(object):
         execute_cmd(multihost, '> /tmp/xauthlog')
         execute_cmd(multihost, f"useradd {TUSER}")
         execute_cmd(multihost, "cp -f myxauth /myxauth")
-        execute_cmd(multihost, 'sed -i "s/pam_xauth\.so/pam_xauth\.so '
-                               'debug xauthpath=\/myxauth/g" /etc/pam.d/su')
+        execute_cmd(multihost, 'sed -i "s/pam_xauth\\.so/pam_xauth\\.so '
+                               'debug xauthpath=\\/myxauth/g" /etc/pam.d/su')
         execute_cmd(multihost, 'echo "pam-xauth-tester    hard    nproc   '
                                '0" >> /etc/security/limits.conf')
         execute_cmd(multihost, 'mkdir -p /root/.xauth')
