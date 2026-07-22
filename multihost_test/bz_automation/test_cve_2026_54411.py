@@ -94,8 +94,13 @@ class TestCVE202654411(object):
         """
         client = multihost.client[0]
         use_gdbm = is_gdbm(multihost)
-        db_ext = ".gdbm" if use_gdbm else ".db"
-        db_path = f"/etc/security/cve_test_users{db_ext}"
+        base_path = "/etc/security/cve_test_users"
+        if use_gdbm:
+            db_file = f"{base_path}.gdbm"
+            pam_db_path = db_file
+        else:
+            db_file = f"{base_path}.db"
+            pam_db_path = base_path
         pam_service = "/etc/pam.d/test_pam_userdb_cve"
         helper_script = "/tmp/pam_userdb_timing.py"
         file_location = "/multihost_test/bz_automation/script/pam_userdb_timing.py"
@@ -107,8 +112,8 @@ class TestCVE202654411(object):
             entries = [("user1", "password1"),
                        ("user2", "password2"),
                        ("user3", "longpassword123")]
-            create_db(client, db_path, entries, use_gdbm)
-            setup_pam_service(client, pam_service, db_path)
+            create_db(client, db_file, entries, use_gdbm)
+            setup_pam_service(client, pam_service, pam_db_path)
 
             output = client.run_command(
                 f"python3 {helper_script}").stdout_text
@@ -121,7 +126,7 @@ class TestCVE202654411(object):
             assert results["functional"]["wrong_user"], \
                 "Unknown user should be rejected"
         finally:
-            client.run_command(f"rm -f {db_path}", raiseonerr=False)
+            client.run_command(f"rm -f {db_file}", raiseonerr=False)
             client.run_command(f"rm -f {pam_service}", raiseonerr=False)
             client.run_command(f"rm -f {helper_script}", raiseonerr=False)
 
@@ -154,8 +159,13 @@ class TestCVE202654411(object):
         """
         client = multihost.client[0]
         use_gdbm = is_gdbm(multihost)
-        db_ext = ".gdbm" if use_gdbm else ".db"
-        db_path = f"/etc/security/cve_icase{db_ext}"
+        base_path = "/etc/security/cve_icase"
+        if use_gdbm:
+            db_file = f"{base_path}.gdbm"
+            pam_db_path = db_file
+        else:
+            db_file = f"{base_path}.db"
+            pam_db_path = base_path
         pam_service = "/etc/pam.d/test_pam_userdb_icase"
 
         helper_script = "/tmp/pam_userdb_icase.py"
@@ -163,8 +173,8 @@ class TestCVE202654411(object):
 
         try:
             entries = [("user1", "Password1")]
-            create_db(client, db_path, entries, use_gdbm)
-            setup_pam_service(client, pam_service, db_path, "icase")
+            create_db(client, db_file, entries, use_gdbm)
+            setup_pam_service(client, pam_service, pam_db_path, "icase")
 
             client.transport.put_file(
                 os.getcwd() + file_location, helper_script)
@@ -179,6 +189,6 @@ class TestCVE202654411(object):
                 "Case-insensitive match (uppercase) should succeed"
             assert not results["wrong"], "Wrong password should fail"
         finally:
-            client.run_command(f"rm -f {db_path}", raiseonerr=False)
+            client.run_command(f"rm -f {db_file}", raiseonerr=False)
             client.run_command(f"rm -f {pam_service}", raiseonerr=False)
             client.run_command(f"rm -f {helper_script}", raiseonerr=False)

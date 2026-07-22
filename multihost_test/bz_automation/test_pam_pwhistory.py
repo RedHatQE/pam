@@ -79,7 +79,7 @@ class TestPamBz(object):
         execute_cmd(multihost, "chmod 600 /etc/security/opasswd")
         execute_cmd(multihost, "echo R3dh4T1nC | passwd --stdin pamtest1")
         execute_cmd(multihost, "> /etc/security/opasswd")
-        execute_cmd(multihost, "sed -i -e 's/^password\s\+sufficient\s\+pam_unix.so/password"
+        execute_cmd(multihost, "sed -i -e 's/^password\\s\\+sufficient\\s\\+pam_unix.so/password"
                                "    requisite     pam_pwhistory.so remember=3 "
                                "use_authtok enforce_for_root\\n\\0/'  "
                                "/etc/pam.d/system-auth")
@@ -96,7 +96,7 @@ class TestPamBz(object):
         execute_cmd(multihost, "echo R3dh4T1nC | passwd --stdin pamtest1")
         execute_cmd(multihost, "> /etc/security/opasswd")
         execute_cmd(multihost, "cat /tmp/system-auth > /etc/pam.d/system-auth")
-        execute_cmd(multihost, "sed -i -e 's/^password\s\+sufficient\s\+pam_unix.so/password"
+        execute_cmd(multihost, "sed -i -e 's/^password\\s\\+sufficient\\s\\+pam_unix.so/password"
                                "    requisite     pam_pwhistory.so remember=3 use_authtok\\n\\0/'  "
                                "/etc/pam.d/system-auth")
         for i in [_PASSWORD, _PASSWORD2, _PASSWORD3, _PASSWORD4, _PASSWORD]:

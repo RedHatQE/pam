@@ -169,3 +169,5 @@ def setup_session(session_multihost, request):
     execute_cmd(session_multihost, "yum update -y shadow-utils")
     execute_cmd(session_multihost, "yum install -y gcc pam-devel")
     execute_cmd(session_multihost, "yum install -y expect")
+    session_multihost.client[0].run_command(
+        "yum install -y libdb-utils", raiseonerr=False)
